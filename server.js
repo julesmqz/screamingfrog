@@ -33,7 +33,7 @@ server.get('/crawlSitemap', function(req, res, next) {
 		conn.createChannel(function(err, ch) {
 			var q = 'sitemap-crawl';
 			data.msg = 'Starting sitemap crawl'
-			data.sitemapUrl = 'https://www.cochemania.mx/export/google/sitemap.xml'
+			data.sitemapUrl = 'https://www.cochemania.mx/export/google/testSitemap.xml'
 			data.started = true;
 
 			ch.assertQueue(q, {
