@@ -2,28 +2,25 @@
 
 var amqp = require('amqplib/callback_api');
 var config = require('../config.js');
-var Crawler = require('../Classes/Crawler.js');
+var DbCrawler = require('../Classes/DbCrawler.js');
 
 amqp.connect(config.rabbitmq.url, function(err, conn) {
 	conn.createChannel(function(err, ch) {
-		var q = config.rabbitmq.queues.simple;
+		var q = config.rabbitmq.queues.db;
 
 		ch.assertQueue(q, {
 			durable: false
 		});
 		console.log(" [*] Waiting for messages in %s. To exit press CTRL+C", q);
-
-
 		ch.consume(q, function(msg) {
-			var wait = true;
 			console.log(" [x] Received %s", msg.content.toString());
 			var data = JSON.parse(msg.content.toString());
-			var crawler = new Crawler();
+			var crawler = new DbCrawler();
 
-			crawler.crawl(data.url,data.jobId, function(res) {
-				console.log('CRAWLED', res.status,res.url);
+			crawler.getTableUrls(data.query,data.connid, function(urls) {
+				console.log('Done. Total urls: ', urls.length);
+				crawler.sendToQueue(urls,data.concurrency,data.speed,data.id);
 			});
-
 
 		}, {
 			noAck: true

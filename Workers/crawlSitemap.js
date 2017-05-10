@@ -1,11 +1,12 @@
 #!/usr/bin/env node
 
 var amqp = require('amqplib/callback_api');
+var config = require('../config.js');
 var SitemapCrawler = require('../Classes/SitemapCrawler.js');
 
-amqp.connect('amqp://localhost', function(err, conn) {
+amqp.connect(config.rabbitmq.url, function(err, conn) {
 	conn.createChannel(function(err, ch) {
-		var q = 'sitemap-crawl';
+		var q = config.rabbitmq.queues.sitemap;
 
 		ch.assertQueue(q, {
 			durable: false
@@ -18,39 +19,7 @@ amqp.connect('amqp://localhost', function(err, conn) {
 
 			crawler.getSitemapUrls(data.sitemapUrl, function(urls) {
 				console.log('Done. Total urls: ', urls.length);
-
-				amqp.connect('amqp://localhost', function(err, conn) {
-					conn.createChannel(function(err, ch) {
-						var q = 'simple-crawl';
-
-						urls.forEach(function(url) {
-							var data = {};
-							data.id = Date.now();
-							data.msg = 'Starting simple crawl'
-							data.url = url
-							data.started = true;
-
-							ch.assertQueue(q, {
-								durable: false
-							});
-
-							// Note: on Node 6 Buffer.from(msg) should be used
-							ch.sendToQueue(q, new Buffer(JSON.stringify(data)));
-							console.log(" [x] Start job simple crawl");
-
-
-						});
-					});
-
-					setTimeout(function() {
-						conn.close();
-					}, 5000);
-
-
-
-				});
-
-
+				crawler.sendToQueue(urls,data.concurrency,data.speed,data.id);
 			});
 
 		}, {

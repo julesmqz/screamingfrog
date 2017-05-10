@@ -1,11 +1,12 @@
 {
-  "name": "screamingfrog",
+  "name": "yellingturtle",
   "version": "1.0.0",
-  "description": "",
+  "description": "A turtle that yells. It is also a SEO tool.",
   "main": "index.js",
   "dependencies": {
     "amqplib": "^0.5.1",
     "casperjs": "^1.1.3",
+    "mysql": "^2.13.0",
     "phantomjs": "^2.1.7",
     "q": "^1.5.0",
     "request": "^2.81.0",
@@ -14,8 +15,9 @@
   },
   "devDependencies": {},
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js & casperjs casperserver.js"
   },
-  "author": "",
+  "author": "Julio",
   "license": "ISC"
 }
