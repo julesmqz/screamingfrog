@@ -32,6 +32,7 @@ var config = {
 		url: 'amqp://localhost',
 		queues: {
 			simple: 'simple-crawl',
+			replySimple: 'reply-simple-crawl',
 			sitemap: 'sitemap-crawl',
 			db: 'db-crawl',
 			crawl: 'simple-crawl',

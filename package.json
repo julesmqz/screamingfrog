@@ -3,9 +3,12 @@
   "version": "1.0.0",
   "description": "A turtle that yells. It is also a SEO tool.",
   "main": "index.js",
+  "repository": "https://github.com/julesmqz/yellingturtle",
   "dependencies": {
     "amqplib": "^0.5.1",
     "casperjs": "^1.1.3",
+    "forever-monitor": "^1.7.1",
+    "foreverjs": "^1.0.6",
     "mysql": "^2.13.0",
     "phantomjs": "^2.1.7",
     "q": "^1.5.0",
