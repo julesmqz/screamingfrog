@@ -23,17 +23,23 @@ amqp.connect(config.rabbitmq.url, function(err, conn) {
 			crawler.crawl(data.url, data.jobId, function(res) {
 				console.log('CRAWLED', res.status, res.url);
 
+				var data2 = {};
+
+				data2.status = res.status;
+				data2.promiseKey = data.promiseKey;
+				data2.url = res.url;
 
 				ch.sendToQueue(msg.properties.replyTo,
-					new Buffer(res.status.toString()), {
+					new Buffer(JSON.stringify(data2)), {
 						correlationId: msg.properties.correlationId
 					});
 
-				console.log('trying to ack');
+				console.log('delay ack %s seconds', data.delay);
 
-				ch.ack(msg);
-
-				console.log('ACK %s',msg.properties.correlationId);
+				setTimeout(function() {
+					ch.ack(msg);
+					console.log('ACK %s', msg.properties.correlationId);
+				}, data.delay * 1000);
 			});
 
 

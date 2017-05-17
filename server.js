@@ -21,19 +21,19 @@ function crawlSitemap(req, res, next) {
 		var shop = shops[req.params.k];
 		data.msg = 'Starting sitemap crawl'
 		data.sitemapUrl = shop.url + shop.sitemap;
-		data.speed = parseInt(req.params.speed);
+		data.delay = parseInt(req.params.delay);
 		data.concurrency = parseInt(req.params.concurrency);
 
 		var insert = {
-			speed: data.speed,
+			delay: data.delay,
 			concurrency: data.concurrency,
 			url: data.sitemapUrl,
 			shop: shop.name,
 			type: 'sitemap',
 			cpid: data.id
 		}
-
-		pool.query('INSERT INTO job SET ?', insert, function(err, results, fields) {
+		
+		pool.query('INSERT INTO yt_job SET ?', insert, function(err, results, fields) {
 			if (err) throw err;
 
 			amqp.connect(config.rabbitmq.url, function(err, conn) {
@@ -79,12 +79,12 @@ function crawlDb(req, res, next) {
 
 			data.msg = 'Starting db crawl in table: ' + table;
 			data.table = table;
-			data.speed = parseInt(req.params.speed);
+			data.delay = parseInt(req.params.delay);
 			data.concurrency = parseInt(req.params.concurrency);
 			data.connid = parseInt(req.params.k);
 
 			var insert = {
-				speed: data.speed,
+				delay: data.delay,
 				concurrency: data.concurrency,
 				url: data.table,
 				shop: shop.name,
@@ -92,7 +92,7 @@ function crawlDb(req, res, next) {
 				cpid: data.id
 			}
 
-			pool.query('INSERT INTO job SET ?', insert, function(err, results, fields) {
+			pool.query('INSERT INTO yt_job SET ?', insert, function(err, results, fields) {
 				if (err) throw err;
 
 				amqp.connect(config.rabbitmq.url, function(err, conn) {
@@ -129,10 +129,10 @@ server.get('/', function(req, res, next) {
 	next();
 });
 
-server.get('/crawlSitemap/:k/:speed/:concurrency', crawlSitemap);
+server.get('/crawlSitemap/:k/:delay/:concurrency', crawlSitemap);
 server.post('/crawlSitemap', crawlSitemap);
 
-server.get('/crawlDb/:k/:t/:speed/:concurrency', crawlDb);
+server.get('/crawlDb/:k/:t/:delay/:concurrency', crawlDb);
 server.post('/crawlDb', crawlDb);
 
 

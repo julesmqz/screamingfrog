@@ -10,7 +10,7 @@ function Crawler() {
 
 }
 
-Crawler.prototype.sendToQueue = function(urls, concurrency, speed, jobId) {
+Crawler.prototype.sendToQueue = function(urls, delay, jobId) {
 	var self = this;
 	amqp.connect(config.rabbitmq.url, function(err, conn) {
 		conn.createChannel(function(err, ch) {
@@ -19,23 +19,29 @@ Crawler.prototype.sendToQueue = function(urls, concurrency, speed, jobId) {
 			ch.assertQueue('', {
 				exclusive: true
 			}, function(err, queue) {
-
+				var promises = [];
 				var corr = jobId.toString();
 				ch.consume(queue.queue, function(msg) {
+					var data = JSON.parse(msg.content.toString());
 					if (msg.properties.correlationId == corr) {
-						console.log(' [.] Got %s', msg.content.toString());
+						promises[data.promiseKey].resolve();
+						console.log(' [.] Got %s for %s', data.status, data.url);
 					}
 				}, {
 					noAck: true
 				});
 
 				urls.forEach(function(url) {
+					var p = Q.defer();
+					promises.push(p);
 					var data = {};
 					data.id = Date.now();
 					data.msg = 'Starting simple crawl'
 					data.url = url
 					data.started = true;
 					data.jobId = jobId;
+					data.promiseKey = promises.length - 1;
+					data.delay = delay;
 
 					// Note: on Node 6 Buffer.from(msg) should be used
 					ch.sendToQueue(q, new Buffer(JSON.stringify(data)), {
@@ -44,31 +50,34 @@ Crawler.prototype.sendToQueue = function(urls, concurrency, speed, jobId) {
 					});
 					console.log(" [x] Start job simple crawl");
 				});
+
+
+
+				Q.all(promises.map(function(p) {
+					return p.promise;
+				})).then(function() {
+					console.log('Kill All workers.');
+
+					console.log('Save to db');
+					var obj = [true, jobId];
+					pool.query('UPDATE yt_job SET finished=? WHERE cpid=?', obj, function(err, results, fields) {
+						if (err) throw err;
+						console.log('Updated db');
+						console.log('Notify... maybe');
+
+						setTimeout(function() {
+							console.log('Closing connection');
+							conn.close();
+						}, 500);
+
+					});
+				});
 			});
 
 		});
 
-		/*setTimeout(function() {
-			console.log('Closing connection');
-			conn.close();
-		}, (speed * chunks.length) + (speed / 2));*/
+
 	});
-
-
-	/*var chunks = [],
-		i = 0,
-		n = urls.length,
-		gap = 0;
-
-	while (i < n) {
-		chunks.push(urls.slice(i, i += concurrency));
-	}
-
-	console.log(chunks);*/
-
-	/*if (chunks.length > 0) {
-		
-	}*/
 };
 
 Crawler.prototype.crawl = function(url, jobId, cb) {
@@ -86,9 +95,10 @@ Crawler.prototype.crawl = function(url, jobId, cb) {
 			body: body
 		}
 
-		pool.query('INSERT INTO response SET ?', obj, function(err, results, fields) {
+		pool.query('INSERT INTO yt_response SET ?', obj, function(err, results, fields) {
 			if (err) throw err;
 			console.log('Inserted into db');
+			obj.insertId = results.insertId;
 			cb.apply(null, [obj, error]);
 		});
 
