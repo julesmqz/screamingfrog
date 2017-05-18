@@ -10,7 +10,7 @@
     "casperjs": "^1.1.3",
     "forever-monitor": "^1.7.1",
     "foreverjs": "^1.0.6",
-    "json2csv": "^3.7.4",
+    "json2csv": "^3.7.3",
     "mysql": "^2.13.0",
     "nodemailer": "^4.0.1",
     "phantomjs": "^2.1.7",
