@@ -1,2 +1,4 @@
 /node_modules
 config.custom.js
+config.example.custom.js
+/tests

@@ -17,8 +17,8 @@ var config = {
 			port: 3306,
 			database: 'cochem_shop'
 		},
-		queries:{
-			oxseo:'SELECT CONCAT(\'https://www.cochemania.mx/\',oxseourl) as url FROM oxseo WHERE oxtype=\'static\'',
+		queries: {
+			oxseo: 'SELECT CONCAT(\'https://www.cochemania.mx/\',oxseourl) as url FROM oxseo WHERE oxtype=\'static\'',
 			cpwsearchexorbyteredirects: '',
 		}
 	}],
@@ -38,12 +38,18 @@ var config = {
 			crawl: 'simple-crawl',
 		}
 	},
-	server:{
+	server: {
 		port: 9090,
 		path: '/Users/jules/Workspace/yellingturtle'
 	},
-	info:{
-		mails:['j.marquez@cyberpuerta.mx']
+	mail: {
+		sender: 'info@cyberpuerta.mx',
+		recipients: ['j.marquez@cyberpuerta.mx'],
+		sesCreds: {
+			'key': '',
+			'secret': '',
+			'region': ''
+		}
 	}
 };
 

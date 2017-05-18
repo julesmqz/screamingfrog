@@ -4,11 +4,14 @@ var request = require('request');
 var mysql = require('mysql');
 var config = require('../config.js');
 var forever = require('forever-monitor');
+var Mailer = require('./Mailer');
+var json2csv = require('json2csv');
 
 var pool = mysql.createPool(config.database);
 
 function Crawler() {
 	var self = this;
+	self.mailer = new Mailer();
 	self._workers = [];
 }
 
@@ -21,9 +24,9 @@ Crawler.prototype.sendToQueue = function(urls, concurrency, delay, jobId) {
 	var q = config.rabbitmq.queues.simple + jobId;
 	var pos = self._createWorkers(q, concurrency);
 
-	setTimeout(function(){
+	setTimeout(function() {
 		promise.resolve(pos);
-	},5000)
+	}, 5000)
 
 
 	promise.promise.then(function(pos) {
@@ -79,6 +82,7 @@ Crawler.prototype.sendToQueue = function(urls, concurrency, delay, jobId) {
 							if (err) throw err;
 							console.log('Updated db');
 							console.log('Notify... maybe');
+							self.buildCsvReport(jobId);
 
 							setTimeout(function() {
 								console.log('Closing connection');
@@ -174,6 +178,40 @@ Crawler.prototype._killWorkers = function(pos) {
 		console.log('Stopping worker');
 		w.stop();
 	});
+};
+
+Crawler.prototype.buildCsvReport = function(jobId) {
+	console.log('Build CSV Report')
+	var self = this;
+
+	pool.query('SELECT yt_job.shop,yt_response.url,status,IF(type = \'db\',yt_job.url,type) as type FROM yt_job JOIN yt_response ON yt_job.cpid = yt_response.jobId WHERE yt_job.cpid = ?', [jobId],
+		function(err, results, fields) {
+			if (err) throw err;
+
+			if (results.length > 0) {
+				try {
+					var fields = ['url', 'status', 'type'];
+					var csv = json2csv({
+						data: results,
+						fields: fields
+					});
+					var subject = '[SEO Crawler] Results for ' + results[0].shop + ' (jobid: '+jobId+')';
+					var msg = 'Here are the results for job ' + jobId + ' for type ' + results[0].type;
+					self.mailer.setAttachment('results_'+jobId+'.csv',csv);
+					self.mailer.send(subject,msg,function(err,info){
+						if (err) throw err;
+						console.log('Report sent by mail with id: ' + info.messageId);
+					});
+				} catch (err) {
+					// Errors are thrown for bad options, or if the data is empty and no fields are provided. 
+					// Be sure to provide fields if it is possible that your data array will be empty. 
+					console.error(err);
+				}
+			}
+
+		});
+
+
 };
 
 
