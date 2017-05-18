@@ -6,10 +6,12 @@ var Crawler = require('../Classes/Crawler.js');
 
 amqp.connect(config.rabbitmq.url, function(err, conn) {
 	conn.createChannel(function(err, ch) {
-		var q = config.rabbitmq.queues.simple;
+		var args = process.argv.slice(2);
+		var q = args[0] || config.rabbitmq.queues.simple;
 
 		ch.assertQueue(q, {
-			durable: false
+			durable: false,
+			autoDelete: true
 		});
 		ch.prefetch(1);
 		console.log(" [*] Waiting for messages in %s. To exit press CTRL+C", q);
@@ -29,14 +31,13 @@ amqp.connect(config.rabbitmq.url, function(err, conn) {
 				data2.promiseKey = data.promiseKey;
 				data2.url = res.url;
 
-				ch.sendToQueue(msg.properties.replyTo,
-					new Buffer(JSON.stringify(data2)), {
-						correlationId: msg.properties.correlationId
-					});
-
 				console.log('delay ack %s seconds', data.delay);
 
 				setTimeout(function() {
+					ch.sendToQueue(msg.properties.replyTo,
+						new Buffer(JSON.stringify(data2)), {
+							correlationId: msg.properties.correlationId
+						});
 					ch.ack(msg);
 					console.log('ACK %s', msg.properties.correlationId);
 				}, data.delay * 1000);

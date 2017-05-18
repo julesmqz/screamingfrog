@@ -39,7 +39,11 @@ var config = {
 		}
 	},
 	server:{
-		port: 9090
+		port: 9090,
+		path: '/Users/jules/Workspace/yellingturtle'
+	},
+	info:{
+		mails:['j.marquez@cyberpuerta.mx']
 	}
 };
 
@@ -47,7 +51,7 @@ var config = {
 try {
 	var customConf = require('./config.custom.js');
 	// do stuff
-	extend(config, customConf);
+	config = customConf;
 } catch (ex) {
 	// File does not exists
 }
