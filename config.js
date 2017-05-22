@@ -40,7 +40,8 @@ var config = {
 	},
 	server: {
 		port: 9090,
-		path: '/Users/jules/Workspace/yellingturtle'
+		path: '/Users/jules/Workspace/yellingturtle',
+		requestTimeout: 50000
 	},
 	mail: {
 		sender: 'info@cyberpuerta.mx',

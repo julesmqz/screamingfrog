@@ -104,7 +104,7 @@ Crawler.prototype.sendToQueue = function(urls, concurrency, delay, jobId) {
 Crawler.prototype.crawl = function(url, jobId, cb) {
 	console.log('Crawling ', url);
 
-	request(url, function(error, response, body) {
+	request(url, {timeout: config.server.requestTimeout }, function(error, response, body) {
 		if (error) throw error;
 		// console.log('error:', error); // Print the error if one occurred
 		// console.log('statusCode:', response && response.statusCode); // Print the response status code if a response was received
@@ -184,7 +184,7 @@ Crawler.prototype.buildCsvReport = function(jobId) {
 	console.log('Build CSV Report')
 	var self = this;
 
-	pool.query('SELECT yt_job.shop,yt_response.url,status,IF(type = \'db\',yt_job.url,type) as type FROM yt_job JOIN yt_response ON yt_job.cpid = yt_response.jobId WHERE yt_job.cpid = ?', [jobId],
+	pool.query('SELECT yt_job.shop,yt_response.url,status,IF(type = \'db\',yt_job.url,type) as type FROM yt_job JOIN yt_response ON yt_job.cpid = yt_response.jobId WHERE yt_response.status > 200 AND yt_job.cpid = ?', [jobId],
 		function(err, results, fields) {
 			if (err) throw err;
 
