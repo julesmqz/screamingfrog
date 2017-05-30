@@ -1,10 +1,12 @@
 #!/usr/bin/env node
 
+var mysql = require('mysql');
 var amqp = require('amqplib/callback_api');
 var config = require('../config.js');
 var RQC = require('../Classes/RabbitMqClass');
 
 var rabbit = new RQC();
+var pool = mysql.createPool(config.shops[1].database);
 
 amqp.connect(config.rabbitmq.url, function(err, conn) {
 	conn.createChannel(function(err, ch) {
@@ -30,6 +32,13 @@ amqp.connect(config.rabbitmq.url, function(err, conn) {
 
 						// Save into remote DATABASE
 						console.log('Save into remote DB');
+
+						var obj = ['processed', o];
+
+						pool.query('UPDATE cache_creator SET status=? WHERE oxid=?', obj, function(err, results, fields) {
+							if (err) throw err;
+							console.log('Updated into db');
+						});
 					});
 				});
 			});
