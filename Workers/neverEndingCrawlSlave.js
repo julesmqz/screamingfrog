@@ -2,6 +2,7 @@
 
 var config = require('../config');
 var RQC = require('../Classes/RabbitMqClass');
+var request = require('request');
 
 var rabbit = new RQC();
 //var pool = mysql.createPool(config.database);
