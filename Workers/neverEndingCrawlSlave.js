@@ -26,10 +26,10 @@ rabbit.listen(q, function(data, res) {
 		data2.success = true;
 		// console.log('error:', error); // Print the error if one occurred
 		// console.log('statusCode:', response && response.statusCode); // Print the response status code if a response was received
-		rabbit.ACK(data2, res.channel, res.message);
-
-
-
+		// Wait for it
+		setTimeout(function() {
+			rabbit.ACK(data2, res.channel, res.message);
+		}, 15000);
 	});
 
 
