@@ -3,7 +3,9 @@ var amqp = require('amqplib/callback_api');
 var config = require('./config.js');
 var extend = require('util')._extend
 var mysql = require('mysql');
+var RQC = require('./Classes/RabbitMqClass');
 
+var rabbit = new RQC();
 var pool = mysql.createPool(config.database);
 
 var server = restify.createServer();
@@ -122,47 +124,47 @@ function crawlDb(req, res, next) {
 }
 
 function crawlSpecific(req, res, next) {
-	if (req.params.oxids == 'undefined') {
+	if (req.params.urls == 'undefined' || req.params.ids == 'undefined') {
 		res.send({
-			error: 'Not cool bro. Send some ids'
+			error: 'Not cool bro. Send some urls and ids'
 		}, 500);
 		next();
 	} else {
 		var data = {
-			id: 'neverEndingCrawl'
+			id: 'neverEndingCrawl',
+			uid: '',
+			urls: req.params.urls,
+			ids: req.params.ids
 		};
+
+		console.log(data);
 
 		var shops = config.shops;
 		var oxids = req.params.oxids;
 		if (shops[req.params.k] != undefined) {
 			var shop = shops[req.params.k];
 			var q = config.rabbitmq.queues.specific;
-			data.msg = 'Starting specific crawling for ' + oxids.length + ' number of links';
-			data.delay = 0;
-			data.concurrency = 0;
+			data.msg = 'Starting specific crawling for ' + (data.ids.length * data.urls.length) + ' link(s)';
 			data.connid = parseInt(req.params.k);
-			data.oxids = oxids;
-			data.urls = shop.altUrls;
 
-			amqp.connect(config.rabbitmq.url, function(err, conn) {
-				conn.createChannel(function(err, ch) {
-					data.started = true;
-					ch.assertQueue(q, {
-						durable: false
+			data.ids.forEach(function(i) {
+				data.urls.forEach(function(u) {
+					var data3 = {
+						url: u+i,
+						uid: rabbit.generateUuid(),
+						oxid: i
+					};
+					console.log('Sending url %s with uid %s', data3.url, data3.uid);
+					rabbit.send(q, data3, function(corr) {
+						console.log('SENT with corr %s', corr);
+					}, function(data, conn) {
+						console.log('Job answer with data %s for tick %s', data.response, data.uid);
 					});
-					// Note: on Node 6 Buffer.from(msg) should be used
-					ch.sendToQueue(q, new Buffer(JSON.stringify(data)));
-					console.log(" [x] Start job specific");
 				});
-				setTimeout(function() {
-					conn.close();
-					res.send(data, 200);
-					next();
-				}, 1000);
+
 			});
-
-
-
+			res.send(data, 200);
+			next();
 		} else {
 			res.send(data, 500);
 			next();

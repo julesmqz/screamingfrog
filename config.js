@@ -24,7 +24,7 @@ var config = {
 	}, {
 		name: 'Cyberpuerta',
 		url: 'https://www.cyberpuerta.mx',
-		altUrls: ['http://web01.cyberpuerta.mx/~cyberp', 'http://web02.cyberpuerta.mx/~cyberp']
+		altUrls: ['http://web01.cyberpuerta.mx/~cyberp', 'http://web02.cyberpuerta.mx/~cyberp'],
 		sitemap: '/emsitemap/sitemap-mx.xml',
 		database: {
 			host: '127.0.0.1',

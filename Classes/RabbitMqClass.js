@@ -84,7 +84,7 @@ RabbitMqClass.prototype.close = function(conn, delay) {
 
 
 RabbitMqClass.prototype.generateUuid = function() {
-	return Date.now().toString();
+	return Math.floor((Math.random() * 500) + 1).toString() + Date.now().toString();
 };
 
 RabbitMqClass.prototype.createWorkers = function(workerPath,q, number,jobId) {
