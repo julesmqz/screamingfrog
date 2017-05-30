@@ -14,9 +14,9 @@ rabbit.listen(q, function(data, res) {
 		url: data.url,
 		success: false
 	};
-	console.log('Crawling ', url);
+	console.log('Crawling ', data.url);
 
-	request(url, {
+	request(data.url, {
 		timeout: config.server.requestTimeout
 	}, function(error, response, body) {
 		if (error) throw error;

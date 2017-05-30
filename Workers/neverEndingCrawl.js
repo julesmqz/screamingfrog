@@ -22,7 +22,7 @@ amqp.connect(config.rabbitmq.url, function(err, conn) {
 			data.oxids.forEach(function(o) {
 				data.urls.forEach(function(u) {
 					rabbit.send(qS, {
-						url: u
+						url: u + '/index.php?cl=details&anid=' + o
 					}, function(corr) {
 						console.log('SENT with corr %s', corr);
 					}, function(data, conn) {
