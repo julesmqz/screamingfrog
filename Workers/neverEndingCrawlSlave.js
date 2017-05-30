@@ -29,7 +29,7 @@ rabbit.listen(q, function(data, res) {
 		// Wait for it
 		setTimeout(function() {
 			rabbit.ACK(data2, res.channel, res.message);
-		}, 15000);
+		}, 1000);
 	});
 
 
