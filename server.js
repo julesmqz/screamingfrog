@@ -32,7 +32,7 @@ function crawlSitemap(req, res, next) {
 			type: 'sitemap',
 			cpid: data.id
 		}
-		
+
 		pool.query('INSERT INTO yt_job SET ?', insert, function(err, results, fields) {
 			if (err) throw err;
 
@@ -120,6 +120,55 @@ function crawlDb(req, res, next) {
 		next();
 	}
 }
+
+function crawlSpecific(req, res, next) {
+	if (req.params.oxids == 'undefined') {
+		res.send({
+			error: 'Not cool bro. Send some ids'
+		}, 500);
+		next();
+	} else {
+		var data = {
+			id: 'neverEndingCrawl'
+		};
+
+		var shops = config.shops;
+		var oxids = req.params.oxids;
+		if (shops[req.params.k] != undefined) {
+			var shop = shops[req.params.k];
+			var q = config.rabbitmq.queues.specific;
+			data.msg = 'Starting specific crawling for ' + oxids.length + ' number of links';
+			data.delay = parseInt(req.params.delay);
+			data.concurrency = parseInt(req.params.concurrency);
+			data.connid = parseInt(req.params.k);
+			data.oxids = oxids;
+			data.urls = shop.urls;
+
+			amqp.connect(config.rabbitmq.url, function(err, conn) {
+				conn.createChannel(function(err, ch) {
+					data.started = true;
+					ch.assertQueue(q, {
+						durable: false
+					});
+					// Note: on Node 6 Buffer.from(msg) should be used
+					ch.sendToQueue(q, new Buffer(JSON.stringify(data)));
+					console.log(" [x] Start job specific");
+				});
+				setTimeout(function() {
+					conn.close();
+					res.send(data, 200);
+					next();
+				}, 1000);
+			});
+
+
+
+		} else {
+			res.send(data, 500);
+			next();
+		}
+	}
+}
 // endregion
 
 server.get('/', function(req, res, next) {
@@ -134,6 +183,8 @@ server.post('/crawlSitemap', crawlSitemap);
 
 server.get('/crawlDb/:k/:t/:delay/:concurrency', crawlDb);
 server.post('/crawlDb', crawlDb);
+
+server.post('crawlSpecific/:k/:delay/:concurrency', crawlSpecific);
 
 
 
