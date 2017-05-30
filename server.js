@@ -138,8 +138,8 @@ function crawlSpecific(req, res, next) {
 			var shop = shops[req.params.k];
 			var q = config.rabbitmq.queues.specific;
 			data.msg = 'Starting specific crawling for ' + oxids.length + ' number of links';
-			data.delay = parseInt(req.params.delay);
-			data.concurrency = parseInt(req.params.concurrency);
+			data.delay = 0;
+			data.concurrency = 0;
 			data.connid = parseInt(req.params.k);
 			data.oxids = oxids;
 			data.urls = shop.altUrls;
@@ -184,7 +184,7 @@ server.post('/crawlSitemap', crawlSitemap);
 server.get('/crawlDb/:k/:t/:delay/:concurrency', crawlDb);
 server.post('/crawlDb', crawlDb);
 
-server.post('crawlSpecific/:k/:delay/:concurrency', crawlSpecific);
+server.post('crawlSpecific/:k', crawlSpecific);
 
 
 
