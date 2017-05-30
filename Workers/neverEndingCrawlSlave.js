@@ -7,7 +7,7 @@ var rabbit = new RQC();
 //var pool = mysql.createPool(config.database);
 
 var args = process.argv.slice(2);
-var q = args[0];
+var q = config.rabbitmq.queues.specific + '-slave';
 
 rabbit.listen(q, function(data, res) {
 	var data2 = {
@@ -21,7 +21,7 @@ rabbit.listen(q, function(data, res) {
 	}, function(error, response, body) {
 		if (error) throw error;
 
-		
+
 		data2.success = true;
 		// console.log('error:', error); // Print the error if one occurred
 		// console.log('statusCode:', response && response.statusCode); // Print the response status code if a response was received
