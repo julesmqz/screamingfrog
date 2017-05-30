@@ -142,7 +142,7 @@ function crawlSpecific(req, res, next) {
 			data.concurrency = parseInt(req.params.concurrency);
 			data.connid = parseInt(req.params.k);
 			data.oxids = oxids;
-			data.urls = shop.urls;
+			data.urls = shop.altUrls;
 
 			amqp.connect(config.rabbitmq.url, function(err, conn) {
 				conn.createChannel(function(err, ch) {
