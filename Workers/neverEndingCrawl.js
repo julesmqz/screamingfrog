@@ -16,7 +16,7 @@ rabbit.listen(q, function(data, res) {
 		timeout: config.server.requestTimeout
 	}, function(error, response, body) {
 		var data2 = {
-			response: response.statusCode || null,
+			response: response && response.hasOwnProperty(statusCode) ? response.statusCode : null,
 			uid: data.uid
 		};
 
