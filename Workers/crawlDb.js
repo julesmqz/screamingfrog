@@ -19,7 +19,7 @@ amqp.connect(config.rabbitmq.url, function(err, conn) {
 
 			crawler.getTableUrls(data.query,data.connid, function(urls) {
 				console.log('Done. Total urls: ', urls.length);
-				crawler.sendToQueue(urls,data.concurrency,data.speed,data.id);
+				crawler.sendToQueue(urls,data.concurrency,data.delay,data.id);
 			});
 
 		}, {
