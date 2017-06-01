@@ -8,7 +8,7 @@ function RabbitMqClass() {
 	self._workers = {};
 }
 
-RabbitMqClass.prototype.send = function(q, data, cbSend, cbResponse) {
+RabbitMqClass.prototype.send = function(q, msgs, cbSend, cbResponse) {
 	var self = this;
 	amqp.connect(config.rabbitmq.url, function(err, conn) {
 		conn.createChannel(function(err, ch) {
@@ -22,19 +22,23 @@ RabbitMqClass.prototype.send = function(q, data, cbSend, cbResponse) {
 					var data2 = JSON.parse(msg.content.toString());
 					if (msg.properties.correlationId == corr) {
 						console.log(' [.] Got response');
-						cbResponse.apply(null, [data2,conn]);
+						cbResponse.apply(null, [data2, conn]);
 					}
 				}, {
 					noAck: true
 				});
 
-				// Note: on Node 6 Buffer.from(msg) should be used
-				ch.sendToQueue(q, new Buffer(JSON.stringify(data)), {
-					correlationId: corr,
-					replyTo: q2.queue
+				msgs.forEach(function(data) {
+					// Note: on Node 6 Buffer.from(msg) should be used
+					ch.sendToQueue(q, new Buffer(JSON.stringify(data)), {
+						correlationId: corr,
+						replyTo: q2.queue
+					});
+					console.log(" [x] Start job with ACK");
+					cbSend.apply(null, [corr]);
 				});
-				console.log(" [x] Start job with ACK");
-				cbSend.apply(null, [corr]);
+
+				
 			});
 
 		});
@@ -59,7 +63,11 @@ RabbitMqClass.prototype.listen = function(q, cbResponse) {
 			ch.consume(q, function reply(msg) {
 				console.log(" [x] Received %s", msg.content.toString());
 				var data = JSON.parse(msg.content.toString());
-				cbResponse.apply(null, [data, {channel: ch, message: msg,conn: conn}]);
+				cbResponse.apply(null, [data, {
+					channel: ch,
+					message: msg,
+					conn: conn
+				}]);
 			});
 		});
 	});
@@ -71,7 +79,7 @@ RabbitMqClass.prototype.ACK = function(data, channel, msg) {
 			correlationId: msg.properties.correlationId
 		});
 	channel.ack(msg);
-	console.log('ACK success', data);
+	console.log('ACK success');
 };
 
 RabbitMqClass.prototype.close = function(conn, delay) {
@@ -87,7 +95,7 @@ RabbitMqClass.prototype.generateUuid = function() {
 	return Math.floor((Math.random() * 500) + 1).toString() + Date.now().toString();
 };
 
-RabbitMqClass.prototype.createWorkers = function(workerPath,q, number,jobId) {
+RabbitMqClass.prototype.createWorkers = function(workerPath, q, number, jobId) {
 	var self = this;
 	var currWorks = [];
 	var workerFile = config.server.path + workerPath;

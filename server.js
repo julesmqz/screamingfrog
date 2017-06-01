@@ -147,22 +147,25 @@ function crawlSpecific(req, res, next) {
 			data.msg = 'Starting specific crawling for ' + (data.ids.length * data.urls.length) + ' link(s)';
 			data.connid = parseInt(req.params.k);
 
+			var datas = [];
 			data.ids.forEach(function(i) {
 				data.urls.forEach(function(u) {
 					var data3 = {
-						url: u+i,
+						url: u + i,
 						uid: rabbit.generateUuid(),
 						oxid: i
 					};
 					console.log('Sending url %s with uid %s', data3.url, data3.uid);
-					rabbit.send(q, data3, function(corr) {
-						console.log('SENT with corr %s', corr);
-					}, function(data, conn) {
-						console.log('Job answer with data %s for tick %s', data.response, data.uid);
-					});
+					datas.push(data3);
 				});
-
 			});
+
+			rabbit.send(q, datas, function(corr) {
+				console.log('SENT with corr %s', corr);
+			}, function(data, conn) {
+				console.log('Job answer with data %s for tick %s', data.response, data.uid);
+			});
+
 			res.send(data, 200);
 			next();
 		} else {
